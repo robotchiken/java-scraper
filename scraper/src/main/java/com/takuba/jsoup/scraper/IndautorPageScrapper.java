@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.Connection.Response;
 import org.jsoup.nodes.Document;
@@ -62,11 +63,17 @@ public class IndautorPageScrapper {
 	private ItemDTO getItemInfo(String url,String editorial) {
 		Document htmlItemDocument = getHtmlDocument(url);
 		Elements entradas = htmlItemDocument.select("div.row.lista_libros div.col-md-6 div.col-md-7.no-padding");
-		String isbn = entradas.select("span.isbn").text().replace("ISBN", "");
-		String titulo = entradas.select("span.TituloNolink").text();
-		String autor = entradas.select("span.texto a.texto").get(0).text();
-		String numero = extractInt(titulo);
-		return new ItemDTO(titulo.replaceAll("[0-9]", ""), autor, editorial, isbn, numero);
+		return new ItemDTO(
+				entradas.select("span.TituloNolink").text(),//title
+				entradas.select("span.texto a.texto").get(0).text(),//author
+				getItem("Editorial:",entradas.select("span.labels, span.texto a.texto")),//editorial
+				entradas.select("span.isbn").text().replace("ISBN", "").trim(),//isbn
+				extractInt(entradas.select("span.TituloNolink").text()),//number
+				Integer.valueOf(getItem("Número de páginas:",entradas.select("span.labels,span.textofecha"))),//numberOfPages
+				entradas.select("span:contains(cm.)").text(),//size
+				extractDouble(entradas.select("span:contains($)").text()),//price
+				getItem("Encuadernación:",entradas.select("span.labels,span.textofecha"))
+		);
 	}
 	
 	public void displayItems() {
@@ -98,10 +105,29 @@ public class IndautorPageScrapper {
         return doc;
     }
     
-    private String extractInt(String str)
+    private Integer extractInt(String str)
     {
         str = str.replaceAll("[^0-9]", ""); // regular expression
-        return str;
+		return StringUtils.isNotBlank(str) ? Integer.valueOf(str) : 0;
     }
 
+	private Double extractDouble(String str){
+		str = str.replaceAll("[^0-9]", "");
+		return StringUtils.isNotBlank(str) ? Double.valueOf(str) : 0;
+	}
+
+	private String getItem(String item,Elements elements){
+		int pos = -1;
+		String result = null;
+		for(int i = 0; i< elements.size();i++){
+			if(StringUtils.equals(elements.get(i).text(),item)){
+				pos = i;
+				break;
+			}
+		}
+		if(pos>=0){
+			result = elements.get(pos+1).text();
+		}
+		return result;
+	}
 }
