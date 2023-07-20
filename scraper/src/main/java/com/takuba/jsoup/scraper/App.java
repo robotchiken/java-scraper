@@ -1,24 +1,15 @@
 package com.takuba.jsoup.scraper;
 
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Properties;
-
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.common.errors.WakeupException;
-import org.apache.kafka.common.serialization.StringDeserializer;
-
-public class App 
+public class App
 {
 	public static final String urls[] = {
 			//"ataque de los titanes",
 			//"the boys",
 			//"my hero academia",
 			//"berserk",
-			"one punch man"
+			//"one punch man",
+			//"x-men"
+			"cuatro fantasticos"
 			};
 	
 	

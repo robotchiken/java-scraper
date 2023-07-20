@@ -12,7 +12,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 public class IndautorPageScrapper {
-	private List<ItemDTO> listItems =null;
+	private List<ItemDTO> listItems;
 	private final String url="https://isbnmexico.indautor.cerlalc.org/catalogo.php?mode=resultados_avanzada&isbn=&titulo=%s&autor=&id_materia=&materia=&idioma=&fecha_aparicion=&id_subtema=";
 	public IndautorPageScrapper() {
 		listItems  = new ArrayList<>();
@@ -38,9 +38,11 @@ public class IndautorPageScrapper {
 	            Elements entradas = document.select("div.row.lista_libros div.col-md-6");
 	            // Paseo cada una de las entradas
 	            for (Element elem : entradas) {
-	                String urlTmp=elem.select("div.col-md-7.no-padding a.titulo").attr("abs:href"); 
-	                String editorial=elem.select("div.col-md-7.no-padding a.texto").get(1).text();
-	                listItems.add(getItemInfo(urlTmp,editorial.replace("Editorial", "").trim()));
+	                String urlTmp=elem.select("div.col-md-7.no-padding a.titulo").attr("abs:href");
+					ItemDTO itemInfo = getItemInfo(urlTmp);
+					if(itemInfo != null){
+						listItems.add(itemInfo);
+					}
 	                // Con el método "text()" obtengo el contenido que hay dentro de las etiquetas HTML
 	                // Con el método "toString()" obtengo todo el HTML con etiquetas incluidas
 	            }
@@ -60,16 +62,22 @@ public class IndautorPageScrapper {
 		System.out.println("Finaliza busqueda de titulos");
 	}
 	
-	private ItemDTO getItemInfo(String url,String editorial) {
+	private ItemDTO getItemInfo(String url) {
 		Document htmlItemDocument = getHtmlDocument(url);
 		Elements entradas = htmlItemDocument.select("div.row.lista_libros div.col-md-6 div.col-md-7.no-padding");
+		String soporte = getItem("Soporte:", entradas.select("span.labels,span.textofecha"));
+		if(StringUtils.equalsIgnoreCase(soporte,"Digital")){
+			return null;
+		}
+		String editorial = getItem("Editorial:", entradas.select("span.labels, span.texto a.texto")).replace("Editorial","");
+		String numberOfPAges = getItem("Número de páginas:", entradas.select("span.labels,span.textofecha"));
 		return new ItemDTO(
 				entradas.select("span.TituloNolink").text(),//title
-				entradas.select("span.texto a.texto").get(0).text(),//author
-				getItem("Editorial:",entradas.select("span.labels, span.texto a.texto")),//editorial
+				getItem("Autor:",entradas.select("span.labels, span.texto a.texto")),//author
+				StringUtils.stripStart(editorial,null) ,//editorial
 				entradas.select("span.isbn").text().replace("ISBN", "").trim(),//isbn
 				extractInt(entradas.select("span.TituloNolink").text()),//number
-				Integer.valueOf(getItem("Número de páginas:",entradas.select("span.labels,span.textofecha"))),//numberOfPages
+				StringUtils.isNotBlank(numberOfPAges) ? Integer.valueOf(numberOfPAges) : null,//numberOfPages
 				entradas.select("span:contains(cm.)").text(),//size
 				extractDouble(entradas.select("span:contains($)").text()),//price
 				getItem("Encuadernación:",entradas.select("span.labels,span.textofecha"))
@@ -108,12 +116,12 @@ public class IndautorPageScrapper {
     private Integer extractInt(String str)
     {
         str = str.replaceAll("[^0-9]", ""); // regular expression
-		return StringUtils.isNotBlank(str) ? Integer.valueOf(str) : 0;
+		return StringUtils.isNotBlank(str) ? Integer.parseInt(str) : 0;
     }
 
 	private Double extractDouble(String str){
 		str = str.replaceAll("[^0-9]", "");
-		return StringUtils.isNotBlank(str) ? Double.valueOf(str) : 0;
+		return StringUtils.isNotBlank(str) ? Double.parseDouble(str) : 0;
 	}
 
 	private String getItem(String item,Elements elements){
