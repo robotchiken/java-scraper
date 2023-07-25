@@ -5,16 +5,25 @@ public class App
 	public static final String urls[] = {
 			//"ataque de los titanes",
 			//"the boys",
-			//"my hero academia",
+			"my hero academia"
 			//"berserk",
 			//"one punch man",
 			//"x-men"
-			"cuatro fantasticos"
+			//"cuatro fantasticos"
 			};
 	
 	
 	public static void main( String[] args )
     {
+		try {
+			Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
+		} catch (InstantiationException e) {
+			throw new RuntimeException(e);
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException(e);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
 		IndautorPageScrapper scrapper = new IndautorPageScrapper();
 		for(int i = 0; i<urls.length;i++) {
 			scrapper.findTitle(urls[i]);

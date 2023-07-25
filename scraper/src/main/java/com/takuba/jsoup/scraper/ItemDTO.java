@@ -7,14 +7,14 @@ import lombok.*;
 public class ItemDTO {
 
 	private String title;
-	private String author;
-	private String editorial;
+	private Integer idAuthor;
+	private Integer idEditorial;
 	private String isbn;
 	private Integer number;
 	private Integer numberOfPages;
 	private String size;
 	private Double price;
-	private String binding;//encuadernacion
+	private Integer IdBinding;//encuadernacion
 
 
 }
